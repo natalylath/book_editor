@@ -1,7 +1,7 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import ast
-import pymysql.cursors
 import json
+import logging
 
 class Book:
 
@@ -16,29 +16,6 @@ class Book:
     def create_from_sql_item(sql_item):
         return Book(sql_item['Title'], sql_item['Author'], sql_item['Content'])
 
-connection = pymysql.connect(host='192.168.100.2',
-    user='user1',
-    password='user1',
-    db='nataly_test1',
-    charset='utf8mb4',
-    cursorclass=pymysql.cursors.DictCursor)
-
-try:
-
-    with connection.cursor() as cursor:
-        sql = "SELECT `Id`, `Title`, `Author`, `Content` FROM `books`"
-        cursor.execute(sql)
-        result = cursor.fetchall()
-        data = result
-finally:
-    connection.close()
-
-books_dict = {}
-for item in data:
-    book_id = item['Id']
-    books_dict[book_id] = Book.create_from_sql_item(item)
-    books_dict[book_id] = json.dumps(books_dict[book_id].__dict__)
-books_json = json.dumps(books_dict)   
 
 class HTTPGetOutput:
     def __init__(self, response_code, headers, data):
@@ -46,14 +23,35 @@ class HTTPGetOutput:
         self.headers = headers
         self.data = data
 
+class BookRequestHandler:
+    def __init__(self, books_dict):
+        self.books_dict = books_dict
+
+    def do_GET_impl(self):
+        books_json = {}
+        for book_id, book in self.books_dict.items():
+            books_json[book_id] = json.dumps(book.__dict__)
+
+        books_json = json.dumps(books_json)
+        output = HTTPGetOutput(200, [('Content-type', 'application/json')], bytes(books_json, "utf8"))
+        return output
+
+
 class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        self.handler_impl = BookRequestHandler(self.books_dict)
+        super(testHTTPServer_RequestHandler, self).__init__(*args, **kwargs)
+
+    def set_books(self, books_dict):
+        self.books_dict = books_dict
+
     def _set_headers(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
 
     def do_GET(self):
-        output = self.do_GET_impl()
+        output = self.handler_impl.do_GET_impl()
         self.send_response(output.response_code)
         for header in output.headers:
             self.send_header(*header)
@@ -62,9 +60,6 @@ class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
         print('Sending GET')
         return
 
-    def do_GET_impl(self):
-        output = HTTPGetOutput(200, [('Content-type', 'application/json')], bytes(books_json, "utf8"))
-        return output    
 
     def do_POST(self):
         self._set_headers()
@@ -74,18 +69,9 @@ class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
         myres = ast.literal_eval(post_data)
         myid = int(myres['id'])
         print('Sending POST')
-
-        for book_id, elem in books_dict.items():
+        for book_id, elem in self.books_dict.items():
             if book_id == myid:
                 self.wfile.write(bytes(elem, "utf8"))
 
 
-def run():
-    print('Starting server...')
-    server_address = ('127.0.0.1', 8081)
-    httpd = HTTPServer(server_address, testHTTPServer_RequestHandler)
-    httpd.serve_forever()
-
-
-run()
 
