@@ -40,6 +40,12 @@ for item in data:
     books_dict[book_id] = json.dumps(books_dict[book_id].__dict__)
 books_json = json.dumps(books_dict)   
 
+class HTTPGetOutput:
+    def __init__(self, response_code, headers, data):
+        self.response_code = response_code
+        self.headers = headers
+        self.data = data
+
 class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
     def _set_headers(self):
         self.send_response(200)
@@ -47,12 +53,18 @@ class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
+        output = self.do_GET_impl()
+        self.send_response(output.response_code)
+        for header in output.headers:
+            self.send_header(*header)
         self.end_headers()
-        self.wfile.write(bytes(books_json, "utf8"))
+        self.wfile.write(output.data)
         print('Sending GET')
         return
+
+    def do_GET_impl(self):
+        output = HTTPGetOutput(200, [('Content-type', 'application/json')], bytes(books_json, "utf8"))
+        return output    
 
     def do_POST(self):
         self._set_headers()
