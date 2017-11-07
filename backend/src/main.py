@@ -1,14 +1,12 @@
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import HTTPServer
 import pymysql.cursors
 import simpleserver
-import json
 
 def MakeHandlerWithBooks(books_dict):
     class HandlerWrapper(simpleserver.testHTTPServer_RequestHandler):
         def __init__(self, *args, **kwargs):    
             self.set_books(books_dict)
-            super(HandlerWrapper, self).__init__(*args, **kwargs)
-             
+            super(HandlerWrapper, self).__init__(*args, **kwargs)         
     return HandlerWrapper
 
 
@@ -35,7 +33,6 @@ def run():
         book_id = item['Id']
         books_dict[book_id] = simpleserver.Book.create_from_sql_item(item)
 
-
     print('Starting server...')
     server_address = ('127.0.0.1', 8081)
     HandlerClass = MakeHandlerWithBooks(books_dict)
@@ -43,3 +40,5 @@ def run():
     httpd.serve_forever()
 
 run()
+
+

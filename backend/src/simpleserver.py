@@ -4,7 +4,6 @@ import json
 import logging
 
 class Book:
-
     def __init__(self, title='', author='', content=''):
         self.title = title
         self.author = author
@@ -17,11 +16,18 @@ class Book:
         return Book(sql_item['Title'], sql_item['Author'], sql_item['Content'])
 
 
-class HTTPGetOutput:
+class HTTPOutput:
     def __init__(self, response_code, headers, data):
         self.response_code = response_code
         self.headers = headers
         self.data = data
+
+
+class HTTPInput:
+    def __init__(self, headers, data):
+        self.headers = headers
+        self.data = data
+
 
 class BookRequestHandler:
     def __init__(self, books_dict):
@@ -33,7 +39,17 @@ class BookRequestHandler:
             books_json[book_id] = json.dumps(book.__dict__)
 
         books_json = json.dumps(books_json)
-        output = HTTPGetOutput(200, [('Content-type', 'application/json')], bytes(books_json, "utf8"))
+        output = HTTPOutput(200, [('Content-type', 'application/json')], bytes(books_json, "utf8"))
+        return output
+
+    def do_POST_impl(self, client_data_str):
+        client_data_dict = ast.literal_eval(client_data_str)
+        received_id = int(client_data_dict['id'])
+        book_json = ''
+        for book_id, book in self.books_dict.items():
+            if book_id == received_id:
+                book_json = json.dumps(book.__dict__)
+                output = HTTPOutput(200, [('Content-type', 'application/json')], bytes(book_json, "utf8"))
         return output
 
 
@@ -45,11 +61,6 @@ class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
     def set_books(self, books_dict):
         self.books_dict = books_dict
 
-    def _set_headers(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
-
     def do_GET(self):
         output = self.handler_impl.do_GET_impl()
         self.send_response(output.response_code)
@@ -60,18 +71,17 @@ class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
         print('Sending GET')
         return
 
-
     def do_POST(self):
-        self._set_headers()
         content_length = int(self.headers['Content-Length'])
-        post_data = self.rfile.read(content_length)
-        post_data = post_data.decode("utf-8")
-        myres = ast.literal_eval(post_data)
-        myid = int(myres['id'])
-        print('Sending POST')
-        for book_id, elem in self.books_dict.items():
-            if book_id == myid:
-                self.wfile.write(bytes(elem, "utf8"))
+        client_data = self.rfile.read(content_length)
+        client_data_str = client_data.decode("utf-8")
 
+        output = self.handler_impl.do_POST_impl(client_data_str)
+        self.send_response(output.response_code)
+        for header in output.headers:
+            self.send_header(*header)
+        self.end_headers()
+        self.wfile.write(output.data)
+        print('Sending POST')
 
 
