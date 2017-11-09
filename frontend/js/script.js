@@ -26,7 +26,8 @@ function httpPostAsync(url, callback) {
       callback(xhr.responseText);
     };
   };
-  xhr.send(JSON.stringify({id:"1"}));
+  xhr.send(JSON.stringify({author:"Author1", title:"Title1", content:"Content1"}));
+  //xhr.send('');
 };
 
 
@@ -45,11 +46,12 @@ function myfunc() {
 
   document.getElementById('button2').addEventListener('click', function() {
       httpPostAsync("http://127.0.0.1:8081", function(data) {
-        mycontent ='';
-        elem = JSON.parse(data);
-        mycontent = mycontent + '<tr><td>' + elem.author + '</td>' + '<td>' + elem.title + '</td>' + '<td>' + elem.content.trunc(100) + '</td></tr>';
-          
-        document.getElementById("post_table").innerHTML = mycontent;
+        //mycontent ='';
+        //elem = JSON.parse(data);
+        //mycontent = mycontent + '<tr><td>' + elem.author + '</td>' + '<td>' + elem.title + '</td>' + '<td>' + elem.content.trunc(100) + '</td></tr>';
+        mycontent = data  
+        //document.getElementById("post_table").innerHTML = mycontent;
+        document.getElementById("post_response").innerHTML = mycontent;
     });
   }, false);
 }

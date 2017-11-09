@@ -2,10 +2,11 @@ from http.server import HTTPServer
 import pymysql.cursors
 import simpleserver
 
-def MakeHandlerWithBooks(books_dict):
+def MakeHandlerWithBooks(books_dict, book_manager):
     class HandlerWrapper(simpleserver.testHTTPServer_RequestHandler):
         def __init__(self, *args, **kwargs):    
             self.set_books(books_dict)
+            self.set_manager(book_manager)
             super(HandlerWrapper, self).__init__(*args, **kwargs)         
     return HandlerWrapper
 
@@ -26,16 +27,18 @@ def run():
             result = cursor.fetchall()
             data = result
     finally:
-            connection.close()
-
+            pass
+            #connection.close()
+    
     books_dict = {}
     for item in data:
         book_id = item['Id']
         books_dict[book_id] = simpleserver.Book.create_from_sql_item(item)
 
+    book_manager = simpleserver.Book_Manager(connection)
     print('Starting server...')
     server_address = ('127.0.0.1', 8081)
-    HandlerClass = MakeHandlerWithBooks(books_dict)
+    HandlerClass = MakeHandlerWithBooks(books_dict, book_manager)
     httpd = HTTPServer(server_address, HandlerClass)
     httpd.serve_forever()
 
