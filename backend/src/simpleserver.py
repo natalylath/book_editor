@@ -2,6 +2,10 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import ast
 import json
 import pymysql.cursors
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Book:
     def __init__(self, title='', author='', content=''):
@@ -10,22 +14,30 @@ class Book:
         self.content = content
 
     def __str__(self):
-        return "'{0}' by {1} with description: '{2}...'".format(self.title, self.author, self.content)
+        return "'{0}' by {1} - '{2}...'".format(self.title, self.author, self.content)
 
     def create_from_sql_item(sql_item):
-        return Book(sql_item['Title'], sql_item['Author'], sql_item['Content'])
+        return Book(sql_item['title'], sql_item['author'], sql_item['content'])
+
+    def create_from_json_item(json_item):
+        return Book(json_item['title'], json_item['author'], json_item['content'])    
 
     def book_to_json(self):
         return json.dumps(self.__dict__)
 
+    def get_sql_names(self=None):
+        return '`title`, `author`, `content`'
+
+    def get_sql_values(self):
+        return (self.title, self.author, self.content)     
 
 class Book_Manager:
     def __init__(self, connection):
         self.connection = connection
         self.books_dict = {}
         try:
-            with connection.cursor() as cursor:
-                sql = "SELECT `Id`, `Title`, `Author`, `Content` FROM `books`"
+            with self.connection.cursor() as cursor:
+                sql = "SELECT `id`, " + Book.get_sql_names() + "FROM `books`"
                 cursor.execute(sql)
                 result = cursor.fetchall()
                 data = result
@@ -33,20 +45,20 @@ class Book_Manager:
                 pass
                 #connection.close()
         for item in data:
-            book_id = item['Id']
+            book_id = item['id']
             self.books_dict[book_id] = Book.create_from_sql_item(item)
 
     def create_book(self, data):
-        print('Ready to add new record to db with title', data['title'])
+        logger.info('Ready to add a new book to db')
         con = self.connection
+        new_book = Book.create_from_json_item(data)
         try:
             with con.cursor() as cursor:
-                # сделать независимым чтобы при изменении объекта книги не надо было менять менеджера. И надо обновлять books_dict
-                sql = "INSERT INTO `books` (`Title`, `Author`, `Content`) VALUES (%s, %s, %s)"
-                cursor.execute(sql, (data['title'], data['author'], data['content']))
+                sql = "INSERT INTO `books`" + " (" + Book.get_sql_names() + ") " + " VALUES (%s, %s, %s)"
+                cursor.execute(sql, (new_book.get_sql_values()))
                 con.commit()
-        finally:        
-            con.close()
+        finally:
+            logger.info('Book is added')       
 
     def delete_book(self, id):
         pass
@@ -69,13 +81,12 @@ class HTTPInput:
 
 
 class BookRequestHandler:
-    def __init__(self, books_dict, book_manager):
-        self.books_dict = books_dict
+    def __init__(self, book_manager):
         self.book_manager = book_manager
 
     def do_GET_impl(self):
         books_json = {}
-        for book_id, book in self.books_dict.items():
+        for book_id, book in self.book_manager.books_dict.items():
             books_json[book_id] = book.book_to_json()
 
         books_json = json.dumps(books_json)
@@ -92,11 +103,8 @@ class BookRequestHandler:
 
 class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
-        self.handler_impl = BookRequestHandler(self.books_dict, self.book_manager)
+        self.handler_impl = BookRequestHandler(self.book_manager)
         super(testHTTPServer_RequestHandler, self).__init__(*args, **kwargs)
-
-    def set_books(self, books_dict):
-        self.books_dict = books_dict
 
     def set_manager(self, book_manager):
         self.book_manager = book_manager
