@@ -1,18 +1,30 @@
 String.prototype.trunc = String.prototype.trunc ||
-  function(n){
-      return (this.length > n) ? this.substr(0, n-1) + '&hellip;' : this;
+    function(n){
+        return (this.length > n) ? this.substr(0, n-1) + '&hellip;' : this;
 };
 
 function httpGetAsync(url, callback) {
-  var xhr = new XMLHttpRequest();
-  xhr.onreadystatechange = function() {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
     if (xhr.readyState == 4 && xhr.status == 200) {
-      callback(JSON.parse(xhr.response))
+        callback(JSON.parse(xhr.response))
     };
-  };
-  
-  xhr.open('GET', url, true);
-  xhr.send();
+    };
+
+    xhr.open('GET', url, true);
+    xhr.send();
+};
+
+function httpDeleteAsync(url, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4 && xhr.status == 200) {
+        callback()
+    };
+    };
+
+    xhr.open('DELETE', url, true);
+    xhr.send();
 };
 
 function httpPostAsync(url, callback) {
@@ -27,33 +39,38 @@ function httpPostAsync(url, callback) {
     };
   };
   xhr.send(JSON.stringify({author:"Author1", title:"Title1", content:"Content1"}));
-  //xhr.send('');
 };
 
 
 function myfunc() {
      
-      httpGetAsync("http://127.0.0.1:8081", function(data) {
-        mycontent ='';
-        for (i in data) {
-            elem = JSON.parse(data[i])
-            mycontent = mycontent + '<tr><td>' + elem.author + '</td>' + '<td>' + elem.title + '</td>' + '<td>' + elem.content.trunc(100) + '</td></tr>';
-        }
-        
-        document.getElementById("books_table").innerHTML = mycontent;
-      });
+    httpGetAsync("http://127.0.0.1:8081", function(data) {
+    mycontent ='';
+    for (i in data) {
+        elem = JSON.parse(data[i])
+        mycontent = mycontent + '<tr><td>' + elem.author + '</td>' + '<td>' + elem.title + '</td>' + '<td>' + elem.content.trunc(100) + '</td><td><button class="book-del" data-id=' + i + '>Delete</button></td></tr>';
+    }
+
+    document.getElementById("books_table").innerHTML = mycontent;
+    });
   
 
-  document.getElementById('button2').addEventListener('click', function() {
-      httpPostAsync("http://127.0.0.1:8081", function(data) {
-        //mycontent ='';
-        //elem = JSON.parse(data);
-        //mycontent = mycontent + '<tr><td>' + elem.author + '</td>' + '<td>' + elem.title + '</td>' + '<td>' + elem.content.trunc(100) + '</td></tr>';
-        mycontent = data  
-        //document.getElementById("post_table").innerHTML = mycontent;
-        document.getElementById("post_response").innerHTML = mycontent;
+document.getElementById('button2').addEventListener('click', function() {
+    httpPostAsync("http://127.0.0.1:8081", function(data) {
+    mycontent = data
+    document.getElementById("post_response").innerHTML = mycontent;
     });
-  }, false);
+    }, false);
+
+  
+  $('#books_table').on('click', '.book-del', function() {
+    httpDeleteAsync("http://127.0.0.1:8081/book/36", function(data) {
+        console.log(data)
+    });
+  });
+    
 }
 
-window.addEventListener("load", myfunc);
+$( document ).ready(function() {
+    myfunc();
+});
