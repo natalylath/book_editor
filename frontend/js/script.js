@@ -3,12 +3,14 @@ String.prototype.trunc = String.prototype.trunc ||
         return (this.length > n) ? this.substr(0, n-1) + '&hellip;' : this;
 };
 
+const cur_url = 'http://127.0.0.1:8081';
+
 function httpGetAsync(url, callback) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
-    if (xhr.readyState == 4 && xhr.status == 200) {
-        callback(JSON.parse(xhr.response))
-    };
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            callback(JSON.parse(xhr.response))
+        };
     };
 
     xhr.open('GET', url, true);
@@ -18,59 +20,61 @@ function httpGetAsync(url, callback) {
 function httpDeleteAsync(url, callback) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
-    if (xhr.readyState == 4 && xhr.status == 200) {
-        callback()
-    };
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            callback()
+        };
     };
 
     xhr.open('DELETE', url, true);
     xhr.send();
 };
 
+function make_new_book() {
+    var book = {author:$('#new_book_author').val(), title:$('#new_book_title').val(), content:$('#new_book_content').val()};
+    return book;
+}
+
 function httpPostAsync(url, callback) {
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', url, true);
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', url, true);
 
-  xhr.setRequestHeader("Content-type", "application/json");
+    xhr.setRequestHeader("Content-type", "application/json;charset=UTF-8");
 
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState == 4 && xhr.status == 200) {
-      callback(xhr.responseText);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+          callback(xhr.responseText);
+        };
     };
-  };
-  xhr.send(JSON.stringify({author:"Author1", title:"Title1", content:"Content1"}));
+    var book = make_new_book();
+    xhr.send(JSON.stringify(book));
 };
 
-
-function myfunc() {
-     
-    httpGetAsync("http://127.0.0.1:8081", function(data) {
-    mycontent ='';
-    for (i in data) {
-        elem = JSON.parse(data[i])
-        mycontent = mycontent + '<tr><td>' + elem.author + '</td>' + '<td>' + elem.title + '</td>' + '<td>' + elem.content.trunc(100) + '</td><td><button class="book-del" data-id=' + i + '>Delete</button></td></tr>';
-    }
-
-    document.getElementById("books_table").innerHTML = mycontent;
+function my_requests() {
+    httpGetAsync(cur_url, function(data) {
+        mycontent ='';
+        for (i in data) {
+            elem = JSON.parse(data[i])
+            mycontent = mycontent + '<tr><td>' + elem.author + '</td>' + '<td>' + elem.title + '</td>' + '<td>' + elem.content.trunc(100) + '</td><td><button class="book-del" data-id=' + i + '>Delete</button></td></tr>';
+        };
+        $("#books_table").html(mycontent);
     });
   
 
-document.getElementById('button2').addEventListener('click', function() {
-    httpPostAsync("http://127.0.0.1:8081", function(data) {
-    mycontent = data
-    document.getElementById("post_response").innerHTML = mycontent;
+    $('#add_book').click(function() {
+        httpPostAsync(cur_url, function() {
+        });
     });
-    }, false);
 
-  
-  $('#books_table').on('click', '.book-del', function() {
-    httpDeleteAsync("http://127.0.0.1:8081/book/36", function(data) {
-        console.log(data)
+    $('#books_table').on('click', '.book-del', function(e) {
+        var url = cur_url + "/book/" + $(this).data('id')
+        var btn = $(this)
+        httpDeleteAsync(url, function(data) {
+            btn.closest('tr').remove()
+        });
     });
-  });
     
 }
 
-$( document ).ready(function() {
-    myfunc();
+$(document).ready(function() {
+    my_requests();
 });

@@ -22,13 +22,25 @@
     
     <table id="books_table" class="table"></table>
 
-    <p><button id="button2" class="btn btn-default">Send POST request</button></p>
-
-    <!-- <table id="post_table" class="table"></table> -->
-    <p class="bg-primary block" id="post_response"></p>
+    <h3>Add a new book</h3>
+    <form accept-charset="utf-8">
+        <div class="form-group">
+            <label for="exampleInputEmail1">Author</label>
+            <input type="text" class="form-control" placeholder="" id="new_book_author">
+        </div>
+        <div class="form-group">
+            <label for="exampleInputEmail1">Title</label>
+            <input type="text" class="form-control" placeholder="" id="new_book_title">
+        </div>
+       <div class="form-group">
+            <textarea class="form-control" rows="4" placeholder="Content..." id="new_book_content"></textarea>
+        </div>
+        <button id="add_book" type="submit" class="btn btn-primary">Add a new book</button>
+    </form>
 
   </div>
 
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
   <script src="js/script.js"></script>
 </body>
  

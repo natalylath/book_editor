@@ -29,9 +29,21 @@ def test_POST_impl():
     client_data_str = '{"title":"titleNew", "author": "NewNew", "content":"no_content"}'
     fake_bm = MagicMock()
     message = 'New book is added!'
-
+    client_data_dict = ast.literal_eval(client_data_str)
     my_handler = simpleserver.BookRequestHandler(fake_bm)
     output = my_handler.do_POST_impl(client_data_str)
     assert output.response_code == 200
     assert output.headers == [('Content-type', 'text/html')]
     assert output.data == bytes(message, "utf8")
+    fake_bm.create_book.assert_called_with(client_data_dict)
+
+
+def test_DELETE_impl():
+    book_id = '1'
+    fake_bm = MagicMock()
+    my_handler = simpleserver.BookRequestHandler(fake_bm)
+    output = my_handler.do_DELETE_impl(book_id)
+    assert output.response_code == 200
+    assert output.headers == [('Content-type', 'application/json')]
+    fake_bm.delete_book.assert_called_with(book_id)
+
