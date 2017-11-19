@@ -1,6 +1,7 @@
 from http.server import HTTPServer
 import pymysql.cursors
 import simpleserver
+import book_config
 
 def MakeHandlerWithBooks(book_manager):
     class HandlerWrapper(simpleserver.testHTTPServer_RequestHandler):
@@ -11,12 +12,10 @@ def MakeHandlerWithBooks(book_manager):
 
 
 def run():
-    connection = pymysql.connect(host='192.168.100.2',
-    user='user1',
-    password='user1',
-    db='nataly_test1',
-    charset='utf8mb4',
-    cursorclass=pymysql.cursors.DictCursor)
+    connection = pymysql.connect(
+        **book_config.db_config, 
+        charset='utf8mb4', 
+        cursorclass=pymysql.cursors.DictCursor)
 
     book_manager = simpleserver.Book_Manager(connection)
     print('Starting server...')
