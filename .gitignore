@@ -1,2 +1,3 @@
 *.pyc
 /backend/src/.cache
+/backend/src/book_config.py

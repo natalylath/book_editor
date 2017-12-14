@@ -19,7 +19,7 @@ def run():
 
     book_manager = simpleserver.Book_Manager(connection)
     print('Starting server...')
-    server_address = ('127.0.0.1', 8081)
+    server_address = ('127.0.0.1', 3000)
     HandlerClass = MakeHandlerWithBooks(book_manager)
     httpd = HTTPServer(server_address, HandlerClass)
     httpd.serve_forever()

@@ -19,7 +19,7 @@ class Book:
         return Book(sql_item['title'], sql_item['author'], sql_item['content'])
 
     def create_from_json_item(json_item):
-        return Book(json_item['title'], json_item['author'], json_item['content'])    
+        return Book(json_item['title'], json_item['author'], json_item['content'])
 
     def book_to_json(self):
         return json.dumps(self.__dict__)
@@ -27,8 +27,14 @@ class Book:
     def get_sql_names(self=None):
         return '`title`, `author`, `content`'
 
+    def get_sql_names_as_list(self=None):
+        return ['`title`', '`author`', '`content`']
+
     def get_sql_values(self):
-        return (self.title, self.author, self.content)     
+        return [self.title, self.author, self.content]
+
+    def get_sql_values_from_json(json_item):
+        return [json_item['title'], json_item['author'], json_item['content']]
 
 class Book_Manager:
     def __init__(self, connection):
@@ -66,7 +72,6 @@ class Book_Manager:
 
     def delete_book(self, id):
         logger.info('Ready to delete a book from db')
-
         con = self.connection
         try:
             with con.cursor() as cursor:
@@ -78,8 +83,27 @@ class Book_Manager:
             del self.books_dict[id]
 
     def update_book(self, data):
-        pass
+        con = self.connection
+        sql = self.create_update_sql(data)
+        try:
+            with con.cursor() as cursor:
+                cursor.execute(sql)
+                con.commit()
+            pass
+        finally:
+            logger.info('Book is updated')
+            book_id = int(data['id'])
+            self.books_dict[book_id] = Book.create_from_json_item(data)
 
+    def create_update_sql(self, data):
+        sql = "UPDATE `books` SET "
+        book_id = int(data['id'])
+        updated_values = Book.get_sql_values_from_json(data)
+        names = Book.get_sql_names_as_list()
+        for i in range(len(names)):
+            sql = sql + names[i] + "='" + updated_values[i] + "', "
+        sql = sql[:-2] + "WHERE `id`=" + str(book_id)
+        return sql
 
 class HTTPOutput:
     def __init__(self, response_code, headers, data):
@@ -119,6 +143,13 @@ class BookRequestHandler:
         output = HTTPOutput(200, [('Content-type', 'text/html')], bytes(message, "utf8"))
         return output
 
+    def do_PUT_impl(self, client_data_str):
+        client_data_dict = ast.literal_eval(client_data_str)
+        self.book_manager.update_book(client_data_dict)
+        message = 'Book is updated!'
+        output = HTTPOutput(200, [('Content-type', 'text/html')], bytes(message, "utf8"))
+        return output
+
     def do_DELETE_impl(self, book_id):
         self.book_manager.delete_book(book_id)
         output = HTTPOutput1(200, [('Content-type', 'application/json')])
@@ -134,6 +165,7 @@ class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
         self.book_manager = book_manager
 
     def do_GET(self):
+        logger.debug(self.path)
         output = self.handler_impl.do_GET_impl()
         self.send_response(output.response_code)
         for header in output.headers:
@@ -155,6 +187,18 @@ class testHTTPServer_RequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(output.data)
         logger.info('Sending POST')
+
+    def do_PUT(self):
+        content_length = int(self.headers['Content-Length'])
+        client_data = self.rfile.read(content_length)
+        client_data_str = client_data.decode("utf-8")
+
+        output = self.handler_impl.do_PUT_impl(client_data_str)
+        self.send_response(output.response_code)
+        for header in output.headers:
+            self.send_header(*header)
+        self.end_headers()
+        logger.info('Sending PUT')    
 
 
     def do_DELETE(self):

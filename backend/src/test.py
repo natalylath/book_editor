@@ -26,7 +26,7 @@ def test_GET_impl():
 
 
 def test_POST_impl():
-    client_data_str = '{"title":"titleNew", "author": "NewNew", "content":"no_content"}'
+    client_data_str = '{"title": "titleNew", "author": "NewNew", "content": "no_content"}'
     fake_bm = MagicMock()
     message = 'New book is added!'
     client_data_dict = ast.literal_eval(client_data_str)
@@ -47,3 +47,15 @@ def test_DELETE_impl():
     assert output.headers == [('Content-type', 'application/json')]
     fake_bm.delete_book.assert_called_with(book_id)
 
+
+def test_PUT_impl():
+    client_data_str = '{"id": "1", "title": "title1", "author": "234", "content": "no_content"}'
+    fake_bm = MagicMock()
+    message = 'Book is updated!'
+    client_data_dict = ast.literal_eval(client_data_str)
+    my_handler = simpleserver.BookRequestHandler(fake_bm)
+    output = my_handler.do_PUT_impl(client_data_str)
+    assert output.response_code == 200
+    assert output.headers == [('Content-type', 'text/html')]
+    assert output.data == bytes(message, "utf8")
+    fake_bm.update_book.assert_called_with(client_data_dict)
