@@ -44,6 +44,20 @@ function httpPostAsync(book, url, callback) {
   xhr.send(JSON.stringify(book));
 }
 
+function httpPutAsync(book, url, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('PUT', url, true);
+
+  xhr.setRequestHeader("Content-type", "application/json;charset=UTF-8");
+
+  xhr.onreadystatechange = function() {
+      if (xhr.readyState == 4 && xhr.status == 200) {
+        callback(xhr.responseText);
+      };
+  };
+  xhr.send(JSON.stringify(book));
+};
+
 $(document).ready(function() {
 
   // Get data from server
@@ -116,6 +130,7 @@ $(document).ready(function() {
 
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.updateBook = this.updateBook.bind(this);
       }
 
       handleChange(e) {
@@ -127,6 +142,12 @@ $(document).ready(function() {
         //e.preventDefault();
         let book = {'author': this.state.new_book_author, 'title': this.state.new_book_title, 'content': this.state.new_book_content};
         httpPostAsync(book, cur_url, function() {});
+      }
+
+      updateBook(e) {
+        let book_id = 50
+        let book = {id: book_id, author:'Malina22', title:'Tarabam', content:'No no'};
+        httpPutAsync(book, cur_url, function() {});
       }
 
       render() {
@@ -144,6 +165,8 @@ $(document).ready(function() {
                   <textarea className="form-control" rows="4" name="new_book_content" placeholder={this.state.new_book_content} onChange={this.handleChange}></textarea>
               </div>
               <button type="submit" className="btn btn-primary">Add a new book</button>
+              <p/>
+              <button className="btn btn-primary" onClick={this.updateBook}>Update the 7th book</button>
           </form>
         )
       }

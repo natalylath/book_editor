@@ -38,7 +38,7 @@ Book.prototype.get_sql_names_as_list = function() {
 function Book_Manager(connection) {
     this.books = {};
     this.connection = connection;
-    
+
     var book_man = this;
     this.connection.query('SELECT id, author, title, content from books', function(err, rows) {
         if(err) {
@@ -47,7 +47,7 @@ function Book_Manager(connection) {
         } else {
             for (var i in rows) {
                 var book_id = rows[i].id;
-                book_man.books[book_id] = Book.prototype.create_from_sql_item(rows[i]) 
+                book_man.books[book_id] = Book.prototype.create_from_sql_item(rows[i])
             }
         }
     });
@@ -66,7 +66,7 @@ Book_Manager.prototype.delete_book = function(id) {
             console.log('Book is deleted.')
         }
     });
-    
+
 }
 
 Book_Manager.prototype.create_book = function(data) {
@@ -85,7 +85,7 @@ Book_Manager.prototype.create_book = function(data) {
             })
         }
     });
-    
+
 }
 
 Book_Manager.prototype.update_book = function(data) {
@@ -108,11 +108,11 @@ Book_Manager.prototype.update_book = function(data) {
         var sql = 'UPDATE books SET '
         for (var i in names) {
             sql = sql + names[i] + "='" + updated_values[i] + "', "
-        }     
+        }
         sql = sql.slice(0, -2) + " WHERE id=" + book_id
         return sql
     }
-    
+
 }
 
 var conn = mysql.createConnection(config_db);
