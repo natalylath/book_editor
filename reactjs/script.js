@@ -30,25 +30,19 @@ function httpDeleteAsync(url, callback) {
     xhr.send();
 };
 
-function make_new_book() {
-    var book = {author:$('#new_book_author').val(), title:$('#new_book_title').val(), content:$('#new_book_content').val()};
-    return book;
+function httpPostAsync(book, url, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', url, true);
+
+  xhr.setRequestHeader("Content-type", "application/json;charset=UTF-8");
+
+  xhr.onreadystatechange = function() {
+      if (xhr.readyState == 4 && xhr.status == 200) {
+        callback(xhr.responseText);
+      };
+  };
+  xhr.send(JSON.stringify(book));
 }
-function httpPostAsync(url, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', url, true);
-
-    xhr.setRequestHeader("Content-type", "application/json;charset=UTF-8");
-
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-          callback(xhr.responseText);
-        };
-    };
-    var book = make_new_book();
-    xhr.send(JSON.stringify(book));
-};
-
 
 $(document).ready(function() {
 
@@ -116,30 +110,40 @@ $(document).ready(function() {
     }
 
     class BookAddForm extends React.Component {
-      constructor() {
-        super();
+      constructor(props) {
+        super(props);
+        this.state = {'new_book_content': 'Give short book description...'};
+
+        this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
       }
 
+      handleChange(e) {
+        const name = e.target.name;
+        this.setState({[name]: e.target.value});
+      }
+
       handleSubmit(e) {
-          e.preventDefault();
+        e.preventDefault();
+        let book = {'author': this.state.new_book_author, 'title': this.state.new_book_title, 'content': this.state.new_book_content};
+        httpPostAsync(book, cur_url, function() {});
       }
 
       render() {
         return (
-          <form>
+          <form onSubmit={this.handleSubmit} method="post">
               <div className="form-group">
                   <label>Author</label>
-                  <input type="text" className="form-control" placeholder="" id="new_book_author"/>
+                  <input type="text" className="form-control" name="new_book_author" onChange={this.handleChange}/>
               </div>
               <div className="form-group">
                   <label>Title</label>
-                  <input type="text" className="form-control" placeholder="" id="new_book_title"/>
+                  <input type="text" className="form-control" name="new_book_title" onChange={this.handleChange}/>
               </div>
              <div className="form-group">
-                  <textarea className="form-control" rows="4" placeholder="Content..." id="new_book_content"></textarea>
+                  <textarea className="form-control" rows="4" name="new_book_content" placeholder={this.state.new_book_content} onChange={this.handleChange}></textarea>
               </div>
-              <button id="add_book" type="submit" className="btn btn-primary">Add a new book</button>
+              <button type="submit" className="btn btn-primary">Add a new book</button>
           </form>
         )
       }
