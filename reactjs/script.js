@@ -124,7 +124,7 @@ $(document).ready(function() {
       }
 
       handleSubmit(e) {
-        e.preventDefault();
+        //e.preventDefault();
         let book = {'author': this.state.new_book_author, 'title': this.state.new_book_title, 'content': this.state.new_book_content};
         httpPostAsync(book, cur_url, function() {});
       }
