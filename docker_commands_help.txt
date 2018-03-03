@@ -1,0 +1,12 @@
+New:
+cd C:\Users\natal_000\Desktop\book_editor\backend-nodejs
+docker-compose up
+CTRL+C for exit 
+
+OLD:
+docker build -t thesergeevs/book_editor .
+docker ps
+docker run --rm -v c:/Users:/data alpine ls /data
+docker run --rm --name hello -p 49002:3001 -v C:\Users\natal_000\Desktop\book_editor\backend-nodejs:/opt/app -it thesergeevs/book_editor
+docker kill hello
+docker exec -it <mycontainer> bash
