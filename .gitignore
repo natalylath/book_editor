@@ -3,3 +3,4 @@
 /backend/src/book_config.py
 /nodejs/node_modules/*
 /nodejs/config_db.js
+node_modules
