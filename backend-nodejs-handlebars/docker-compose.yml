@@ -1,0 +1,25 @@
+version: "2.1"
+
+services:
+    book-editor:
+        build: .
+        ports:
+          - '49002:3001'
+        volumes:
+          - .:/opt/app:rw
+        links:
+            - mysql
+
+ 
+    mysql:
+        image: mysql:latest
+        ports:
+            - '49003:3306'
+        environment:
+            MYSQL_ROOT_PASSWORD: secret
+            MYSQL_DATABASE: books
+            MYSQL_USER: books_user
+            MYSQL_PASSWORD: books_user
+            
+        volumes:
+            - ../mysql-data:/var/lib/mysql:rw
