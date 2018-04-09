@@ -22,7 +22,7 @@ module.exports =
   	  "log_date_format" : "YYYY-MM-DD HH:mm:ss",
   	  "merge_logs"      : true,
   	  "autorestart" : false,
-      "watch"       : ["src"],
+      "watch"       : ["book-client/src"],
   	  "watch_options":
       {
 		    "usePolling": true

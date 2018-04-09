@@ -1,24 +1,57 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import './App.css';
 
-String.prototype.trunc = String.prototype.trunc ||
-    function(n){
-        return (this.length > n) ? this.substr(0, n-1) + '...' : this;
+function truncate(string, length) {
+  if (string.length > length) {
+    return string.slice(0, length) + '...';
+  } else {
+    return string;
+  }
 };
 
-// CHECK URL and PORT!
-const cur_url = '/api/';
+
 
 /* Fetch function instead of XMLHttpRequest */
 function getBooks(success) {
-  return fetch(cur_url, {
+  return fetch('/api/', {
     headers: {
       Accept: 'application/json',
     },
   }).then(checkStatus)
     .then(parseJSON)
     .then(success);
+};
+
+function deleteBook(url) {
+  return fetch(url, {
+    method: 'delete',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+  }).then(checkStatus).catch(error => console.log('error:', error));
+};
+
+function createBook(data) {
+  return fetch('/api/', {
+    method: 'post',
+    body: JSON.stringify(data),
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+  }).then(checkStatus);
+};
+
+function updateBook(data) {
+  return fetch('/api/', {
+    method: 'put',
+    body: JSON.stringify(data),
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+  }).then(checkStatus);
 };
 
 function checkStatus(response) {
@@ -37,37 +70,6 @@ function parseJSON(response) {
   return response.json();
 };
 
-function deleteBook(url) {
-  return fetch(url, {
-    method: 'delete',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    },
-  }).then(checkStatus);
-};
-
-function createBook(data) {
-  return fetch(cur_url, {
-    method: 'post',
-    body: JSON.stringify(data),
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    },
-  }).then(checkStatus);
-};
-
-function updateBook(data) {
-  return fetch(cur_url, {
-    method: 'put',
-    body: JSON.stringify(data),
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    },
-  }).then(checkStatus);
-};
 
 // Get data from server
   const BOOKS = [];
@@ -109,7 +111,7 @@ function updateBook(data) {
     deleteBookHandle = () => {
       this.setState({visible: false});
 
-      let url = cur_url + "/book/" + this.props.book.id
+      let url = '/api/book/' + this.props.book.id
       deleteBook(url);
     };
 
@@ -129,11 +131,12 @@ function updateBook(data) {
 
   class BookRowContent extends React.Component {
     render() {
+      let short_desc = truncate(this.props.book.content, 100);
       return (
         <tr>
             <td>{this.props.book.title}</td>
             <td>{this.props.book.author}</td>
-            <td>{(this.props.book.content).trunc(100)}</td>
+            <td>{short_desc}</td>
             <td><button className="book-del" onClick={this.props.deleteBook}>Delete</button></td>
         </tr>
       );
@@ -143,7 +146,10 @@ function updateBook(data) {
 class BookAddForm extends React.Component {
 
   state = {
-    'new_book_content': 'Give short book description...',
+    'author':'',
+    'title':'',
+    'content':'',
+    'new_book_content': 'Give short book description',
   };
 
   handleChange = (e) => {
@@ -158,8 +164,8 @@ class BookAddForm extends React.Component {
   }
 
   updateBook = (e) => {
-    let book_id = 6;
-    let book = {'id': book_id, 'author':'Malina22', 'title':'Tarabam', 'content':'No no'};
+    let book_id = 1;
+    let book = {'id': book_id, 'author':'Malina22', 'title':'090Tarabam', 'content':'No no'};
     updateBook(book);
   }
 

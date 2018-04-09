@@ -96,8 +96,9 @@ Book_Manager.prototype.update_book = function(data) {
             book_man.connection.end();
             throw err;
         } else {
-            var book_id = data['id']
+            var book_id = data['id'];
             book_man.books[book_id] = Book.prototype.create_from_json_item(data)
+            console.log('Book is updated.');
         }
     });
 
@@ -109,8 +110,8 @@ Book_Manager.prototype.update_book = function(data) {
         for (var i in names) {
             sql = sql + names[i] + "='" + updated_values[i] + "', "
         }
-        sql = sql.slice(0, -2) + " WHERE id=" + book_id
-        return sql
+        sql = sql.slice(0, -2) + " WHERE id=" + book_id;
+        return sql;
     }
 
 }
@@ -136,23 +137,24 @@ function delete_func(req, res) {
     res.end();
 }
 
-app.delete('/book/:book_id', delete_func)
+app.delete('/api/book/:book_id', delete_func)
 
 function post_func(req, res) {
     book_manager.create_book(req.body);
     res.end();
 }
 
-app.post('/', post_func);
+app.post('/api/', post_func);
 
 function put_func(req, res) {
     book_manager.update_book(req.body);
     res.end();
 }
 
-app.put('/', put_func)
+app.put('/api/', put_func)
 
 //connection.end();
+
 
 // Start the server
 var server = app.listen(3001, function() {
