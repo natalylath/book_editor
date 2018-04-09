@@ -80,7 +80,7 @@ function my_requests() {
         };
         $("#books_table").html(mycontent);
     });
-  
+
 
     $('#add_book').click(function(e) {
         httpPostAsync(cur_url, function() {
@@ -95,12 +95,12 @@ function my_requests() {
     $('#books_table').on('click', '.book-del', function(e) {
         var tr = $(this).closest('tr');
         var url = cur_url + "/book/" + tr.data('id')
-        
+
         httpDeleteAsync(url, function(data) {
             tr.remove()
         });
     });
-    
+
 }
 
 $(document).ready(function() {
