@@ -2,6 +2,7 @@ var express = require('express');
 var path = require('path');
 var exphbs  = require('express-handlebars');
 var mysql = require('mysql');
+var config_db = require('./config_db');
 var bodyParser = require("body-parser");
 
 var app = express();
@@ -32,13 +33,7 @@ app.get('/', function(req, res) {
 var books = [];
 var book_list = {book: books}
 
-var connection = mysql.createConnection({
-  host     : 'mysql',
-  port     : '3306',
-  user     : 'books_user',
-  password : 'books_user',
-  database : 'books'
-});
+var connection = mysql.createConnection(config_db);
 connection.connect(function(err) {
   if (err) throw err
   console.log('You are now connected...');
@@ -51,7 +46,7 @@ connection.query('SELECT id, author, title, content from books', function(err, r
 			var book = {'title':rows[i].title, 'author': rows[i].author, 'content': rows[i].content};
 			books.push(book);
 		};
-		
+
 		console.log(book_list)
 		console.log(books0)
 		app.get('/', function(req, res) {
