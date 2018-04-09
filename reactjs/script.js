@@ -6,63 +6,71 @@ String.prototype.trunc = String.prototype.trunc ||
 // CHECK URL and PORT!
 const cur_url = 'http://127.0.0.1:3000';
 
-function httpGetAsync(url, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            callback(JSON.parse(xhr.response))
-        };
-    };
-
-    xhr.open('GET', url, true);
-    xhr.send();
+/* Fetch function instead of XMLHttpRequest */
+function getBooks(success) {
+  return fetch(cur_url, {
+    headers: {
+      Accept: 'application/json',
+    },
+  }).then(checkStatus)
+    .then(parseJSON)
+    .then(success);
 };
 
-function httpDeleteAsync(url, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            callback()
-        };
-    };
-
-    xhr.open('DELETE', url, true);
-    xhr.send();
+function checkStatus(response) {
+  if (response.status >= 200 && response.status < 300) {
+    return response;
+  } else {
+    const error = new Error(`HTTP Error ${response.statusText}`);
+    error.status = response.statusText;
+    error.response = response;
+    console.log(error);
+    throw error;
+  }
 };
 
-function httpPostAsync(book, url, callback) {
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', url, true);
+function parseJSON(response) {
+  return response.json();
+};
 
-  xhr.setRequestHeader("Content-type", "application/json;charset=UTF-8");
+function deleteBook(url) {
+  return fetch(url, {
+    method: 'delete',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+  }).then(checkStatus);
+};
 
-  xhr.onreadystatechange = function() {
-      if (xhr.readyState == 4 && xhr.status == 200) {
-        callback(xhr.responseText);
-      };
-  };
-  xhr.send(JSON.stringify(book));
-}
+function createBook(data) {
+  return fetch(cur_url, {
+    method: 'post',
+    body: JSON.stringify(data),
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+  }).then(checkStatus);
+};
 
-function httpPutAsync(book, url, callback) {
-  var xhr = new XMLHttpRequest();
-  xhr.open('PUT', url, true);
-
-  xhr.setRequestHeader("Content-type", "application/json;charset=UTF-8");
-
-  xhr.onreadystatechange = function() {
-      if (xhr.readyState == 4 && xhr.status == 200) {
-        callback(xhr.responseText);
-      };
-  };
-  xhr.send(JSON.stringify(book));
+function updateBook(data) {
+  return fetch(cur_url, {
+    method: 'put',
+    body: JSON.stringify(data),
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+  }).then(checkStatus);
 };
 
 $(document).ready(function() {
 
   // Get data from server
-    const BOOKS = []
-    httpGetAsync(cur_url, function(data) {
+    const BOOKS = [];
+
+    getBooks(function(data) {
       for (const prop in data) {
         let book = JSON.parse(data[prop])
         book.id = prop
@@ -75,79 +83,84 @@ $(document).ready(function() {
 
     });
 
-    class BookRow extends React.Component {
-      constructor(props) {
-        super(props);
-        this.deleteBook = this.deleteBook.bind(this);
-        this.state = {visible: true}
-      }
-      deleteBook() {
-        this.setState({visible: false});
-
-        let url = cur_url + "/book/" + this.props.book.id
-        httpDeleteAsync(url, function() {});
-      }
-      render() {
-        const book = this.props.book;
-
-        let row = null;
-
-        if (this.state.visible) {
-            row = <tr>
-                    <td>{book.title}</td>
-                    <td>{book.author}</td>
-                    <td>{(book.content).trunc(100)}</td>
-                    <td><button className="book-del" onClick={this.deleteBook}>Delete</button></td>
-                  </tr>
-        }
-        return row;
-      }
-    }
 
     class BookTable extends React.Component {
       render() {
-        const rows = [];
 
-        this.props.books.forEach((book) => {
-
-          rows.push(
-            <BookRow book={book} key={book.id} />
-          );
-        });
+        const rowComponents = this.props.books.map((book) => (
+          <BookRow book={book} key={book.id} />
+        ));
 
         return (
           <table className="table">
-            <tbody>{rows}</tbody>
+            <tbody>{rowComponents}</tbody>
           </table>
+        );
+      }
+    };
+
+    class BookRow extends React.Component {
+      state = {
+        visible: true,
+      };
+
+      deleteBookHandle = () => {
+        this.setState({visible: false});
+
+        let url = cur_url + "/book/" + this.props.book.id
+        deleteBook(url);
+      };
+
+      render() {
+          if (this.state.visible) {
+            return (
+              <BookRowContent
+                book={this.props.book}
+                deleteBook={this.deleteBookHandle}
+              />
+            );
+          }
+           else return null;
+      }
+    }
+
+
+    class BookRowContent extends React.Component {
+      render() {
+        return (
+          <tr>
+              <td>{this.props.book.title}</td>
+              <td>{this.props.book.author}</td>
+              <td>{(this.props.book.content).trunc(100)}</td>
+              <td><button className="book-del" onClick={this.props.deleteBook}>Delete</button></td>
+          </tr>
         );
       }
     }
 
+
+
     class BookAddForm extends React.Component {
-      constructor(props) {
-        super(props);
-        this.state = {'new_book_content': 'Give short book description...'};
 
-        this.handleChange = this.handleChange.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
-        this.updateBook = this.updateBook.bind(this);
-      }
+      state = {
+        'new_book_content': 'Give short book description...',
+      };
 
-      handleChange(e) {
+      handleChange = (e) => {
         const name = e.target.name;
         this.setState({[name]: e.target.value});
       }
 
-      handleSubmit(e) {
+      handleSubmit = (e) => {
         //e.preventDefault();
         let book = {'author': this.state.new_book_author, 'title': this.state.new_book_title, 'content': this.state.new_book_content};
-        httpPostAsync(book, cur_url, function() {});
+        createBook(book);
       }
 
-      updateBook(e) {
-        let book_id = 50
-        let book = {id: book_id, author:'Malina22', title:'Tarabam', content:'No no'};
-        httpPutAsync(book, cur_url, function() {});
+      updateBook = (e) => {
+        let book_id = 6;
+        let book = {'id': book_id, 'author':'Malina22', 'title':'Tarabam', 'content':'No no'};
+        updateBook(book);
       }
 
       render() {
