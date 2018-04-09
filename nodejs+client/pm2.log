@@ -1,0 +1,16 @@
+2018-04-08 18:02:44: 
+> book-test@0.1.0 start /opt/app/book-client
+> react-scripts start
+
+2018-04-08 18:02:45: Listening on port 3001
+2018-04-08 18:02:45: You are now connected...
+2018-04-08 18:02:50: Starting the development server...
+
+2018-04-08 18:02:54: Compiled with warnings.
+
+./src/App.js
+  Line 5:  String prototype is read only, properties should not be added  no-extend-native
+2018-04-08 18:02:54: 
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
