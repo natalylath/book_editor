@@ -48,7 +48,7 @@ function deleteBook(url) {
 };
 
 function createBook(data) {
-  return fetch('/api/', {
+  return fetch('/api/create/', {
     method: 'post',
     body: JSON.stringify(data),
     headers: {
@@ -59,7 +59,7 @@ function createBook(data) {
 };
 
 function updateBook(data) {
-  return fetch('/api/', {
+  return fetch('/api/update/', {
     method: 'put',
     body: JSON.stringify(data),
     headers: {
@@ -146,7 +146,7 @@ class BookRowContent extends React.Component {
 class BookAddForm extends React.Component {
 
   state = {
-    'new_book_content': 'Give short book description...',
+    "new_book_content": "Give short book description...",
   };
 
   handleChange = (e) => {
@@ -155,14 +155,12 @@ class BookAddForm extends React.Component {
   }
 
   handleSubmit = (e) => {
-    //e.preventDefault();
-    let book = {'author': this.state.new_book_author, 'title': this.state.new_book_title, 'content': this.state.new_book_content};
+    let book = {"author": this.state.new_book_author, "title": this.state.new_book_title, "content": this.state.new_book_content};
     createBook(book);
   }
 
-  updateBook = (e) => {
-    let book_id = 6;
-    let book = {'id': book_id, 'author':'Malina22', 'title':'Tarabam', 'content':'No no'};
+  handleUpdate = (e) => {
+    let book = {"id": "1", "author":"Lourence", "title":"Kids and toys", "content":"About toys!!!"};
     updateBook(book);
   }
 
@@ -180,9 +178,12 @@ class BookAddForm extends React.Component {
          <div className="form-group">
               <textarea className="form-control" rows="4" name="new_book_content" placeholder={this.state.new_book_content} onChange={this.handleChange}></textarea>
           </div>
+          <p/>
           <button type="submit" className="btn btn-primary">Add a new book</button>
           <p/>
-          <button className="btn btn-primary" onClick={this.updateBook}>Update the 7th book</button>
+          <button type="button" className="btn btn-primary" onClick={this.handleUpdate}>Update the first book</button>
+          <p/>
+          <p/>
       </form>
     )
   }

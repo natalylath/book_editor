@@ -90,7 +90,7 @@ Book_Manager.prototype.create_book = function(data) {
 
 Book_Manager.prototype.update_book = function(data) {
     var book_man = this;
-    var sql = create_update_sql(data)
+    var sql = create_update_sql(data);
     this.connection.query(sql, function(err, rows) {
         if(err) {
             book_man.connection.end();
@@ -144,14 +144,14 @@ function post_func(req, res) {
     res.end();
 }
 
-app.post('/api/', post_func);
+app.post('/api/create/', post_func);
 
 function put_func(req, res) {
     book_manager.update_book(req.body);
     res.end();
 }
 
-app.put('/api/', put_func)
+app.put('/api/update/', put_func)
 
 //connection.end();
 
