@@ -1,6 +1,9 @@
-String.prototype.trunc = String.prototype.trunc ||
-    function(n){
-        return (this.length > n) ? this.substr(0, n-1) + '...' : this;
+function truncate(string, length) {
+  if (string.length > length) {
+    return string.slice(0, length) + '...';
+  } else {
+    return string;
+  }
 };
 
 // CHECK URL and PORT!
@@ -127,11 +130,12 @@ $(document).ready(function() {
 
     class BookRowContent extends React.Component {
       render() {
+        let short_desc = truncate(this.props.book.content, 100);
         return (
           <tr>
               <td>{this.props.book.title}</td>
               <td>{this.props.book.author}</td>
-              <td>{(this.props.book.content).trunc(100)}</td>
+              <td>{short_desc}</td>
               <td><button className="book-del" onClick={this.props.deleteBook}>Delete</button></td>
           </tr>
         );
@@ -157,9 +161,8 @@ $(document).ready(function() {
         createBook(book);
       }
 
-      updateBook = (e) => {
-        let book_id = 6;
-        let book = {'id': book_id, 'author':'Malina22', 'title':'Tarabam', 'content':'No no'};
+      handleUpdate = (e) => {
+        let book = {'id': '1', 'author':'Malina', 'title':'Tarabam', 'content':'No no'};
         updateBook(book);
       }
 
@@ -179,7 +182,7 @@ $(document).ready(function() {
               </div>
               <button type="submit" className="btn btn-primary">Add a new book</button>
               <p/>
-              <button className="btn btn-primary" onClick={this.updateBook}>Update the 7th book</button>
+              <button type="button" className="btn btn-primary" onClick={this.handleUpdate}>Update the first book</button>
           </form>
         )
       }
