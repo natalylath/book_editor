@@ -4,3 +4,7 @@
 /nodejs/node_modules/*
 /nodejs/config_db.js
 node_modules
+/backend-nodejs-handlebars/config_db.js
+/nodejs+client/config_db.js
+mysql-data1
+mysql-data

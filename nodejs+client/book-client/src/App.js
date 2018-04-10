@@ -10,7 +10,6 @@ function truncate(string, length) {
 };
 
 
-
 /* Fetch function instead of XMLHttpRequest */
 function getBooks(success) {
   return fetch('/api/', {
@@ -22,6 +21,22 @@ function getBooks(success) {
     .then(success);
 };
 
+function checkStatus(response) {
+  if (response.status >= 200 && response.status < 300) {
+    return response;
+  } else {
+    const error = new Error(`HTTP Error ${response.statusText}`);
+    error.status = response.statusText;
+    error.response = response;
+    console.log(error);
+    throw error;
+  }
+};
+
+function parseJSON(response) {
+  return response.json();
+};
+
 function deleteBook(url) {
   return fetch(url, {
     method: 'delete',
@@ -29,7 +44,7 @@ function deleteBook(url) {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
     },
-  }).then(checkStatus).catch(error => console.log('error:', error));
+  }).then(checkStatus);
 };
 
 function createBook(data) {
@@ -54,102 +69,84 @@ function updateBook(data) {
   }).then(checkStatus);
 };
 
-function checkStatus(response) {
-  if (response.status >= 200 && response.status < 300) {
-    return response;
-  } else {
-    const error = new Error(`HTTP Error ${response.statusText}`);
-    error.status = response.statusText;
-    error.response = response;
-    console.log(error);
-    throw error;
-  }
-};
 
-function parseJSON(response) {
-  return response.json();
-};
+const BOOKS = [];
 
-
-// Get data from server
-  const BOOKS = [];
-
-  getBooks(function(data) {
-    for (const prop in data) {
-      let book = JSON.parse(data[prop])
-      book.id = prop
-      BOOKS.push(book)
-    };
-
-    ReactDOM.render(<App />,
-      document.getElementById('root')
-    );
-
-  });
-
-
-  class BookTable extends React.Component {
-    render() {
-
-      const rowComponents = this.props.books.map((book) => (
-        <BookRow book={book} key={book.id} />
-      ));
-
-      return (
-        <table className="table">
-          <tbody>{rowComponents}</tbody>
-        </table>
-      );
-    }
+getBooks(function(data) {
+  for (const prop in data) {
+    let book = JSON.parse(data[prop])
+    book.id = prop
+    BOOKS.push(book)
   };
 
-  class BookRow extends React.Component {
-    state = {
-      visible: true,
-    };
+  ReactDOM.render(<App/>,
+    document.getElementById('root')
+  );
 
-    deleteBookHandle = () => {
-      this.setState({visible: false});
+});
 
-      let url = '/api/book/' + this.props.book.id
-      deleteBook(url);
-    };
 
-    render() {
-        if (this.state.visible) {
-          return (
-            <BookRowContent
-              book={this.props.book}
-              deleteBook={this.deleteBookHandle}
-            />
-          );
-        }
-         else return null;
-    }
+class BookTable extends React.Component {
+  render() {
+
+    const rowComponents = this.props.books.map((book) => (
+      <BookRow book={book} key={book.id} />
+    ));
+
+    return (
+      <table className="table">
+        <tbody>{rowComponents}</tbody>
+      </table>
+    );
   }
+};
 
+class BookRow extends React.Component {
+  state = {
+    visible: true,
+  };
 
-  class BookRowContent extends React.Component {
-    render() {
-      let short_desc = truncate(this.props.book.content, 100);
-      return (
-        <tr>
-            <td>{this.props.book.title}</td>
-            <td>{this.props.book.author}</td>
-            <td>{short_desc}</td>
-            <td><button className="book-del" onClick={this.props.deleteBook}>Delete</button></td>
-        </tr>
-      );
-    }
+  deleteBookHandle = () => {
+    this.setState({visible: false});
+
+    let url = "/api/book/" + this.props.book.id
+    deleteBook(url);
+  };
+
+  render() {
+      if (this.state.visible) {
+        return (
+          <BookRowContent
+            book={this.props.book}
+            deleteBook={this.deleteBookHandle}
+          />
+        );
+      }
+       else return null;
   }
+}
+
+
+class BookRowContent extends React.Component {
+  render() {
+    let short_desc = truncate(this.props.book.content, 100);
+    return (
+      <tr>
+          <td>{this.props.book.title}</td>
+          <td>{this.props.book.author}</td>
+          <td>{short_desc}</td>
+          <td><button className="book-del" onClick={this.props.deleteBook}>Delete</button></td>
+      </tr>
+    );
+  }
+}
+
+
 
 class BookAddForm extends React.Component {
 
   state = {
-    'author':'',
-    'title':'',
-    'content':'',
-    'new_book_content': 'Give short book description',
+    'new_book_content': 'Give short book description...',
   };
 
   handleChange = (e) => {
@@ -164,8 +161,8 @@ class BookAddForm extends React.Component {
   }
 
   updateBook = (e) => {
-    let book_id = 1;
-    let book = {'id': book_id, 'author':'Malina22', 'title':'090Tarabam', 'content':'No no'};
+    let book_id = 6;
+    let book = {'id': book_id, 'author':'Malina22', 'title':'Tarabam', 'content':'No no'};
     updateBook(book);
   }
 
@@ -191,7 +188,7 @@ class BookAddForm extends React.Component {
   }
 }
 
-class App extends Component {
+class App extends React.Component {
   render() {
     return (
       <div>
@@ -201,5 +198,7 @@ class App extends Component {
     )
   }
 }
+
+
 
 export default App;

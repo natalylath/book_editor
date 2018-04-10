@@ -1,7 +1,10 @@
 New:
-cd C:\Users\natal_000\Desktop\book_editor\backend-nodejs
+cd C:\Users\natal_000\Desktop\book_editor\nodejs
+docker-compose build
 docker-compose up
 CTRL+C for exit 
+
+docker-compose.yml doesn't affect on build. it is parameters for compose.
 
 OLD:
 docker build -t thesergeevs/book_editor .
@@ -10,3 +13,6 @@ docker run --rm -v c:/Users:/data alpine ls /data
 docker run --rm --name hello -p 49002:3001 -v C:\Users\natal_000\Desktop\book_editor\backend-nodejs:/opt/app -it thesergeevs/book_editor
 docker kill hello
 docker exec -it <mycontainer> bash
+
+
+docker run --rm --name hello -p 3000:3000 -v C:/Users/natal_000/learning/book_editor/backend-nodejs:/opt/app -it thesergeevs/book_editor
