@@ -1,78 +1,11 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-
-function truncate(string, length) {
-  if (string.length > length) {
-    return string.slice(0, length) + '...';
-  } else {
-    return string;
-  }
-};
-
-
-/* Fetch function instead of XMLHttpRequest */
-function getBooks(success) {
-  return fetch('/api/', {
-    headers: {
-      Accept: 'application/json',
-    },
-  }).then(checkStatus)
-    .then(parseJSON)
-    .then(success);
-};
-
-function checkStatus(response) {
-  if (response.status >= 200 && response.status < 300) {
-    return response;
-  } else {
-    const error = new Error(`HTTP Error ${response.statusText}`);
-    error.status = response.statusText;
-    error.response = response;
-    console.log(error);
-    throw error;
-  }
-};
-
-function parseJSON(response) {
-  return response.json();
-};
-
-function deleteBook(url) {
-  return fetch(url, {
-    method: 'delete',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    },
-  }).then(checkStatus);
-};
-
-function createBook(data) {
-  return fetch('/api/create/', {
-    method: 'post',
-    body: JSON.stringify(data),
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    },
-  }).then(checkStatus);
-};
-
-function updateBook(data) {
-  return fetch('/api/update/', {
-    method: 'put',
-    body: JSON.stringify(data),
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    },
-  }).then(checkStatus);
-};
-
+import Helpers from './helpers';
+import Client from './client';
 
 const BOOKS = [];
 
-getBooks(function(data) {
+Client.getBooks(function(data) {
   for (const prop in data) {
     let book = JSON.parse(data[prop])
     book.id = prop
@@ -109,8 +42,8 @@ class BookRow extends React.Component {
   deleteBookHandle = () => {
     this.setState({visible: false});
 
-    let url = "/api/book/" + this.props.book.id
-    deleteBook(url);
+    let url = "/api/book/" + this.props.book.id;
+    Client.deleteBook(url);
   };
 
   render() {
@@ -129,7 +62,7 @@ class BookRow extends React.Component {
 
 class BookRowContent extends React.Component {
   render() {
-    let short_desc = truncate(this.props.book.content, 100);
+    let short_desc = Helpers.truncate(this.props.book.content, 100);
     return (
       <tr>
           <td>{this.props.book.title}</td>
@@ -156,12 +89,12 @@ class BookAddForm extends React.Component {
 
   handleSubmit = (e) => {
     let book = {"author": this.state.new_book_author, "title": this.state.new_book_title, "content": this.state.new_book_content};
-    createBook(book);
+    Client.createBook(book);
   }
 
   handleUpdate = (e) => {
     let book = {"id": "1", "author":"Lourence", "title":"Kids and toys", "content":"About toys!!!"};
-    updateBook(book);
+    Client.updateBook(book);
   }
 
   render() {
@@ -199,7 +132,5 @@ class App extends React.Component {
     )
   }
 }
-
-
 
 export default App;
