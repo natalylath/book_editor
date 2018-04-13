@@ -2,22 +2,13 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import Helpers from './helpers';
 import Client from './client';
-
-const BOOKS = [];
-
-Client.getBooks(function(data) {
-  for (const prop in data) {
-    let book = JSON.parse(data[prop])
-    book.id = prop
-    BOOKS.push(book)
-  };
-
-  ReactDOM.render(<App/>,
-    document.getElementById('root')
-  );
-
-});
-
+import {
+  BrowserRouter as Router,
+  Route,
+  Link,
+  Redirect,
+  Switch,
+} from 'react-router-dom';
 
 class BookTable extends React.Component {
   render() {
@@ -79,7 +70,9 @@ class BookRowContent extends React.Component {
 class BookAddForm extends React.Component {
 
   state = {
-    "new_book_content": "Give short book description...",
+    'new_book_author':'',
+    'new_book_title':'',
+    'new_book_content':'',
   };
 
   handleChange = (e) => {
@@ -88,12 +81,16 @@ class BookAddForm extends React.Component {
   }
 
   handleSubmit = (e) => {
+    e.preventDefault();
     let book = {"author": this.state.new_book_author, "title": this.state.new_book_title, "content": this.state.new_book_content};
+    this.setState({'new_book_author':'', 'new_book_title':'','new_book_content':''});
+    this.props.handleSubmitClick(book);
     Client.createBook(book);
   }
 
   handleUpdate = (e) => {
-    let book = {"id": "1", "author":"Lourence", "title":"Kids and toys", "content":"About toys!!!"};
+    let book = {"id": "1", "author":"Mary Jane", "title":"Kids and toys", "content":"***"};
+    this.props.handleUpdateClick(book);
     Client.updateBook(book);
   }
 
@@ -102,14 +99,14 @@ class BookAddForm extends React.Component {
       <form onSubmit={this.handleSubmit} method="post">
           <div className="form-group">
               <label>Author</label>
-              <input type="text" className="form-control" name="new_book_author" onChange={this.handleChange}/>
+              <input type="text" className="form-control" name="new_book_author" onChange={this.handleChange} value={this.state.new_book_author}/>
           </div>
           <div className="form-group">
               <label>Title</label>
-              <input type="text" className="form-control" name="new_book_title" onChange={this.handleChange}/>
+              <input type="text" className="form-control" name="new_book_title" onChange={this.handleChange} value={this.state.new_book_title}/>
           </div>
          <div className="form-group">
-              <textarea className="form-control" rows="4" name="new_book_content" placeholder={this.state.new_book_content} onChange={this.handleChange}></textarea>
+              <textarea className="form-control" rows="4" name="new_book_content" placeholder={this.state.new_book_content} onChange={this.handleChange} value={this.state.new_book_content}></textarea>
           </div>
           <p/>
           <button type="submit" className="btn btn-primary">Add a new book</button>
@@ -122,16 +119,111 @@ class BookAddForm extends React.Component {
   }
 }
 
-class App extends React.Component {
-  
+class BooksDashboard extends React.Component {
+
+  state = {
+    books: []
+  }
+
+  componentDidMount() {
+    Client.getBooks((data) => {
+      let BOOKS = [];
+      for (const prop in data) {
+        let book = JSON.parse(data[prop])
+        book.id = prop
+        BOOKS.push(book)
+      };
+      this.setState({ books: BOOKS });
+    });
+  }
+
+  handleSubmitClick = ((data) => {
+    let l = this.state.books.length;
+    let last_book = this.state.books[l-1];
+    let new_id = parseInt(last_book.id) + 1;
+    const b = Helpers.newBook(new_id, data);
+    this.setState({
+      books: this.state.books.concat(b),
+    });
+  });
+
+  handleUpdateClick = ((data) => {
+    this.setState({
+      books: this.state.books.map((book) => {
+        if (book.id === data.id) {
+          return Object.assign({}, book, {
+            title: data.title,
+            author: data.author,
+            content: data.content
+          });
+        } else {
+          return book;
+        }
+      }),
+    });
+  });
+
   render() {
     return (
-      <div>
-        <BookTable books={BOOKS} />
-        <BookAddForm />
-      </div>
+        <div>
+          <h1>Book List</h1>
+          <BookTable books={this.state.books}/>
+          <BookAddForm handleSubmitClick={this.handleSubmitClick} handleUpdateClick={this.handleUpdateClick} />
+        </div>
     )
   }
 }
+
+
+class App extends React.Component {
+
+  render() {
+    return (
+      <Router>
+        <div>
+          <p></p>
+          <ul style={{overflow: "hidden"}}>
+            <li style={{float: "left", marginRight: "40px"}}><Link to="/account">My Account</Link></li>
+            <li style={{float: "left", marginRight: "40px"}}><Link to="/library">My Library</Link></li>
+          </ul>
+
+          <Switch>
+            <Route path='/account' component={Account} />
+            <Route path='/library' component={MyLibrary} />
+            <Route exact path='/' component={BooksDashboard} />
+            <Route render={({ location }) => (
+              <div>
+                <h4>Error! No matches for {location.pathname}</h4>
+                <p><Link exact="true" to="/">Back</Link></p>
+              </div>
+            )} />
+          </Switch>
+
+        </div>
+      </Router>
+    )
+  }
+}
+
+const Account = () => (
+  <div>
+    <h3>Account</h3>
+    <p>
+      TBD
+    </p>
+    <p><Link exact="true" to="/">Back</Link></p>
+  </div>
+);
+
+const MyLibrary = () => (
+  <div>
+    <h3>My library</h3>
+    <p>
+      TBD
+    </p>
+    <p><Link exact="true" to="/">Back</Link></p>
+  </div>
+);
+
 
 export default App;

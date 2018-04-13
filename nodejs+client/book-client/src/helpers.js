@@ -6,8 +6,21 @@ function truncate(string, length) {
   }
 };
 
+function newBook(new_id, attrs = {}) {
+  const book = {
+    id: new_id,
+    title: attrs.title,
+    author: attrs.author,
+    content: attrs.content,
+  };
+
+  return book;
+}
+
+
 const Helpers = {
   truncate,
+  newBook,
 };
 
 export default Helpers;
